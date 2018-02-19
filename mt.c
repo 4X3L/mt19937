@@ -46,26 +46,32 @@ gen_array (struct mt_gen32 *g)
   g->i = 0;
 }
 
-#ifdef __LINUX__
+#ifdef __linux__
 
 #include <sys/random.h>
 
 int
 mt_init_default_gen32 (struct mt_gen32 *g)
 {
-  if (getrandom (g->x, N, GRND_NONBLOCK) == -1)
+  if (getrandom (g->x, N * sizeof(uint32_t), GRND_NONBLOCK) == -1)
     return -1;
   gen_array (g);
   return 0;
 }
 
-#endif /* __LINUX__ */
+#endif /* __linux__ */
  
 void
 mt_init_gen32 (struct mt_gen32 *g, const uint32_t *seed) 
 {
   memcpy (g->x, seed, N * sizeof (uint32_t));
   gen_array (g);
+}
+
+void
+mt_save_state32 (uint32_t *state, const struct mt_gen32 *g)
+{
+  memcpy (state, g->x, N * sizeof (uint32_t));
 }
 
 uint32_t
@@ -114,7 +120,7 @@ mt_next_int32_range (struct mt_gen32 *g, int32_t m, int32_t n)
 float
 mt_next_float (struct mt_gen32 *g) 
 {
-  return 0x3f800000 | (mt_next_uint32 (g) & 0x007FFFFF);
+  return ((double) mt_next_uint32 (g)) / ((double) UINT32_MAX);
 };
 
 /*
